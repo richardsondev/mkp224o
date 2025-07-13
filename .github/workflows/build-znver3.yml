@@ -22,12 +22,12 @@ jobs:
           ./configure CFLAGS="-O3 -march=znver3 -mtune=znver3 -fomit-frame-pointer -pipe"
           make -j$(nproc)
           strip mkp224o
-          mv mkp224o mkp224o-znver3
+          mv mkp224o znver3-mkp224o
       - name: Upload binary
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
-          name: mkp224o-znver3-linux
-          path: mkp224o-znver3
+          name: znver3-mkp224o-linux
+          path: znver3-mkp224o
 
   windows:
     runs-on: windows-latest
@@ -50,9 +50,9 @@ jobs:
           ./configure CFLAGS="-O3 -march=znver3 -mtune=znver3 -fomit-frame-pointer -pipe"
           make -j$(nproc)
           strip mkp224o.exe
-          mv mkp224o.exe mkp224o-znver3.exe
+          mv mkp224o.exe znver3-mkp224o.exe
       - name: Upload binary
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
-          name: mkp224o-znver3-windows
-          path: mkp224o-znver3.exe
+          name: znver3-mkp224o-windows
+          path: znver3-mkp224o.exe
