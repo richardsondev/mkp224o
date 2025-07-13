@@ -43,6 +43,8 @@ jobs:
             base-devel
             mingw-w64-x86_64-toolchain
             mingw-w64-x86_64-libsodium
+            autoconf
+            automake
       - name: Build
         shell: msys2 {0}
         run: |
