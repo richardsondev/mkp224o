@@ -1,0 +1,105 @@
+name: Build microarchitectures
+
+on:
+  push:
+    branches: ["master"]
+  pull_request:
+    branches: ["master"]
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            arch: x64
+            cc: gcc
+            pkg: libsodium-dev
+            strip: strip
+            exe: ''
+            cflags: "-march=znver3 -mtune=znver3"
+          - os: ubuntu-latest
+            arch: arm64
+            cc: aarch64-linux-gnu-gcc
+            pkg: "libsodium-dev gcc-aarch64-linux-gnu"
+            strip: aarch64-linux-gnu-strip
+            exe: ''
+            cflags: "-march=armv8-a"
+          - os: windows-latest
+            arch: x64
+            msystem: MINGW64
+            cc: gcc
+            strip: strip
+            exe: '.exe'
+            cflags: "-march=znver3 -mtune=znver3"
+          - os: windows-latest
+            arch: arm64
+            msystem: CLANGARM64
+            cc: clang
+            strip: strip
+            exe: '.exe'
+            cflags: "-march=armv8-a"
+          - os: macos-latest
+            arch: x64
+            cc: clang
+            strip: strip
+            exe: ''
+            cflags: "-arch x86_64 -march=znver3 -mtune=znver3"
+          - os: macos-latest
+            arch: arm64
+            cc: clang
+            strip: strip
+            exe: ''
+            cflags: "-arch arm64"
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Install dependencies (linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential autoconf automake pkg-config ${{ matrix.pkg }}
+
+      - name: Setup MSYS2
+        if: runner.os == 'Windows'
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: ${{ matrix.msystem }}
+          update: true
+          install: >-
+            base-devel
+            mingw-w64-${{ matrix.arch == 'x64' && 'x86_64' || 'aarch64' }}-toolchain
+            mingw-w64-${{ matrix.arch == 'x64' && 'x86_64' || 'aarch64' }}-libsodium
+            autoconf
+            automake
+
+      - name: Install dependencies (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          brew update
+          brew install automake autoconf libsodium pkg-config
+
+      - name: Build
+        shell: ${{ runner.os == 'Windows' && 'msys2 {0}' || 'bash' }}
+        run: |
+          ./autogen.sh
+          ./configure CC="${{ matrix.cc }}" CFLAGS="-O3 ${{ matrix.cflags }} -fomit-frame-pointer -pipe"
+          if [ "${RUNNER_OS}" = "macOS" ]; then
+            CORES=$(sysctl -n hw.ncpu)
+          else
+            CORES=$(nproc)
+          fi
+          make -j$CORES
+          ${{ matrix.strip }} mkp224o${{ matrix.exe }}
+          mv mkp224o${{ matrix.exe }} mkp224o-${{ matrix.arch }}${{ matrix.exe }}
+
+      - name: Upload binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: mkp224o-${{ matrix.os }}-${{ matrix.arch }}
+          path: mkp224o-${{ matrix.arch }}${{ matrix.exe }}
+
