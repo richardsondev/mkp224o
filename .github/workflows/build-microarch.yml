@@ -83,8 +83,23 @@ jobs:
           brew update
           brew install automake autoconf libsodium pkg-config
 
-      - name: Build
-        shell: ${{ runner.os == 'Windows' && 'msys2 {0}' || 'bash' }}
+      - name: Build (Windows)
+        if: runner.os == 'Windows'
+        shell: msys2 {0}
+        run: |
+          ./autogen.sh
+          ./configure CC="${{ matrix.cc }}" CFLAGS="-O3 ${{ matrix.cflags }} -fomit-frame-pointer -pipe"
+          if [ "${RUNNER_OS}" = "macOS" ]; then
+            CORES=$(sysctl -n hw.ncpu)
+          else
+            CORES=$(nproc)
+          fi
+          make -j$CORES
+          ${{ matrix.strip }} mkp224o${{ matrix.exe }}
+          mv mkp224o${{ matrix.exe }} mkp224o-${{ matrix.arch }}${{ matrix.exe }}
+
+      - name: Build (Unix)
+        if: runner.os != 'Windows'
         run: |
           ./autogen.sh
           ./configure CC="${{ matrix.cc }}" CFLAGS="-O3 ${{ matrix.cflags }} -fomit-frame-pointer -pipe"
