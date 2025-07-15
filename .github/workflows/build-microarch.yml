@@ -102,7 +102,12 @@ jobs:
         if: runner.os != 'Windows'
         run: |
           ./autogen.sh
-          ./configure CC="${{ matrix.cc }}" CFLAGS="-O3 ${{ matrix.cflags }} -fomit-frame-pointer -pipe"
+          if [ "${{ matrix.arch }}" = "arm64" ] && [ "${RUNNER_OS}" = "Linux" ]; then
+            ./configure --build=x86_64-linux-gnu --host=aarch64-linux-gnu \
+              CC="${{ matrix.cc }}" CFLAGS="-O3 ${{ matrix.cflags }} -fomit-frame-pointer -pipe"
+          else
+            ./configure CC="${{ matrix.cc }}" CFLAGS="-O3 ${{ matrix.cflags }} -fomit-frame-pointer -pipe"
+          fi
           if [ "${RUNNER_OS}" = "macOS" ]; then
             CORES=$(sysctl -n hw.ncpu)
           else
