@@ -23,7 +23,7 @@ jobs:
           - os: ubuntu-latest
             arch: arm64
             cc: aarch64-linux-gnu-gcc
-            pkg: "libsodium-dev gcc-aarch64-linux-gnu"
+            pkg: "libsodium-dev:arm64 gcc-aarch64-linux-gnu"
             strip: aarch64-linux-gnu-strip
             exe: ''
             cflags: "-march=armv8-a"
@@ -31,6 +31,7 @@ jobs:
             arch: x64
             msystem: MINGW64
             cc: gcc
+            packages: "mingw-w64-x86_64-toolchain mingw-w64-x86_64-libsodium"
             strip: strip
             exe: '.exe'
             cflags: "-march=znver3 -mtune=znver3"
@@ -38,6 +39,7 @@ jobs:
             arch: arm64
             msystem: CLANGARM64
             cc: clang
+            packages: "clangarm64-toolchain clangarm64-libsodium"
             strip: strip
             exe: '.exe'
             cflags: "-march=armv8-a"
@@ -72,8 +74,7 @@ jobs:
           update: true
           install: >-
             base-devel
-            mingw-w64-${{ matrix.arch == 'x64' && 'x86_64' || 'aarch64' }}-toolchain
-            mingw-w64-${{ matrix.arch == 'x64' && 'x86_64' || 'aarch64' }}-libsodium
+            ${{ matrix.packages }}
             autoconf
             automake
 
@@ -82,6 +83,9 @@ jobs:
         run: |
           brew update
           brew install automake autoconf libsodium pkg-config
+          echo "CPPFLAGS=-I$(brew --prefix libsodium)/include" >> $GITHUB_ENV
+          echo "LDFLAGS=-L$(brew --prefix libsodium)/lib" >> $GITHUB_ENV
+          echo "PKG_CONFIG_PATH=$(brew --prefix)/lib/pkgconfig" >> $GITHUB_ENV
 
       - name: Build (Windows)
         if: runner.os == 'Windows'
