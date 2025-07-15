@@ -20,11 +20,11 @@ jobs:
             strip: strip
             exe: ''
             cflags: "-march=znver3 -mtune=znver3"
-          - os: ubuntu-latest
+          - os: ubuntu-22.04-arm
             arch: arm64
-            cc: aarch64-linux-gnu-gcc
-            pkg: "libsodium-dev:arm64 gcc-aarch64-linux-gnu"
-            strip: aarch64-linux-gnu-strip
+            cc: gcc
+            pkg: libsodium-dev
+            strip: strip
             exe: ''
             cflags: "-march=armv8-a"
           - os: windows-latest
@@ -35,7 +35,7 @@ jobs:
             strip: strip
             exe: '.exe'
             cflags: "-march=znver3 -mtune=znver3"
-          - os: windows-latest
+          - os: windows-11-arm
             arch: arm64
             msystem: CLANGARM64
             cc: clang
@@ -43,7 +43,7 @@ jobs:
             strip: strip
             exe: '.exe'
             cflags: "-march=armv8-a"
-          - os: macos-latest
+          - os: macos-13
             arch: x64
             cc: clang
             strip: strip
@@ -106,12 +106,7 @@ jobs:
         if: runner.os != 'Windows'
         run: |
           ./autogen.sh
-          if [ "${{ matrix.arch }}" = "arm64" ] && [ "${RUNNER_OS}" = "Linux" ]; then
-            ./configure --build=x86_64-linux-gnu --host=aarch64-linux-gnu \
-              CC="${{ matrix.cc }}" CFLAGS="-O3 ${{ matrix.cflags }} -fomit-frame-pointer -pipe"
-          else
-            ./configure CC="${{ matrix.cc }}" CFLAGS="-O3 ${{ matrix.cflags }} -fomit-frame-pointer -pipe"
-          fi
+          ./configure CC="${{ matrix.cc }}" CFLAGS="-O3 ${{ matrix.cflags }} -fomit-frame-pointer -pipe"
           if [ "${RUNNER_OS}" = "macOS" ]; then
             CORES=$(sysctl -n hw.ncpu)
           else
