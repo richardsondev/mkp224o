@@ -32,6 +32,22 @@ run `./configure --help` to see all available options.
 
 Finally, `make` to start building (`gmake` in \*BSD platforms).
 
+### Cross-compiling for ARM64
+
+To build for ARM64 on an x86 host you need a cross compiler and the ARM64
+version of libsodium installed. On Debian or Ubuntu systems this can be done
+with:
+
+```bash
+sudo dpkg --add-architecture arm64
+sudo apt update
+sudo apt install gcc-aarch64-linux-gnu libsodium-dev:arm64
+```
+
+If `libsodium-dev:arm64` is not available from your package mirror, compile
+libsodium for ARM64 manually and ensure `aarch64-linux-gnu-gcc` can find the
+resulting library when linking.
+
 ### Usage
 
 mkp224o needs one or more filters to work.
